@@ -1,0 +1,652 @@
+{
+  "info": {
+    "name": "MarketPulse-API-Collection",
+    "description": "Bateria de testes da MarketPulse API (Domínio 3 — Varejo & E-commerce). Execute com o Collection Runner, na ordem, com a API recém-iniciada.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. GET /produtos — Catálogo",
+      "item": [
+        {
+          "name": "Listar todos os produtos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/produtos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "produtos"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Retorna array com produtos\", () => { const j = pm.response.json(); pm.expect(j).to.be.an(\"array\").that.is.not.empty; pm.expect(j[0]).to.have.all.keys(\"id_produto\",\"nome\",\"categoria\",\"preco\",\"estoque_qtd\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Filtrar por categoria PERIFERICOS",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/produtos?categoria=PERIFERICOS",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "produtos"
+              ],
+              "query": [
+                {
+                  "key": "categoria",
+                  "value": "PERIFERICOS"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Somente PERIFERICOS\", () => pm.response.json().forEach(p => pm.expect(p.categoria).to.eql(\"PERIFERICOS\")));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Categoria inexistente retorna []",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/produtos?categoria=BRINQUEDOS",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "produtos"
+              ],
+              "query": [
+                {
+                  "key": "categoria",
+                  "value": "BRINQUEDOS"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Lista vazia\", () => pm.expect(pm.response.json()).to.eql([]));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2. POST /pedidos — Fechar Pedido",
+      "item": [
+        {
+          "name": "Fechar pedido com sucesso",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pedidos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pedidos"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cliente_id\": \"CLI-0042\",\n  \"itens\": [\n    {\n      \"produto_id\": \"PROD-101\",\n      \"quantidade\": 2\n    },\n    {\n      \"produto_id\": \"PROD-202\",\n      \"quantidade\": 1\n    }\n  ],\n  \"forma_pagamento\": \"PIX\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "const j = pm.response.json();",
+                  "pm.collectionVariables.set(\"idPedido\", j.id_pedido);",
+                  "pm.test(\"Status inicial PENDENTE_PAGAMENTO\", () => pm.expect(j.status).to.eql(\"PENDENTE_PAGAMENTO\"));",
+                  "pm.test(\"Valor total calculado\", () => pm.expect(j.valor_total).to.eql(339.7));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Erro 404 - produto inexistente",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pedidos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pedidos"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cliente_id\": \"CLI-0042\",\n  \"itens\": [\n    {\n      \"produto_id\": \"PROD-999\",\n      \"quantidade\": 1\n    }\n  ],\n  \"forma_pagamento\": \"PIX\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Erro padronizado: PRODUTO_NAO_ENCONTRADO\", () => {",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j.codigo_erro).to.eql(\"PRODUTO_NAO_ENCONTRADO\");",
+                  "  pm.expect(j).to.have.all.keys(\"codigo_erro\",\"mensagem\",\"timestamp\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Erro 400 - estoque insuficiente",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pedidos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pedidos"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cliente_id\": \"CLI-0042\",\n  \"itens\": [\n    {\n      \"produto_id\": \"PROD-103\",\n      \"quantidade\": 999\n    }\n  ],\n  \"forma_pagamento\": \"CARTAO\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Erro padronizado: ESTOQUE_INSUFICIENTE\", () => {",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j.codigo_erro).to.eql(\"ESTOQUE_INSUFICIENTE\");",
+                  "  pm.expect(j).to.have.all.keys(\"codigo_erro\",\"mensagem\",\"timestamp\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Erro 400 - forma de pagamento inválida",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pedidos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pedidos"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cliente_id\": \"CLI-0042\",\n  \"itens\": [\n    {\n      \"produto_id\": \"PROD-101\",\n      \"quantidade\": 1\n    }\n  ],\n  \"forma_pagamento\": \"DINHEIRO\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Erro padronizado: REQUISICAO_INVALIDA\", () => {",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j.codigo_erro).to.eql(\"REQUISICAO_INVALIDA\");",
+                  "  pm.expect(j).to.have.all.keys(\"codigo_erro\",\"mensagem\",\"timestamp\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Erro 400 - quantidade zero",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pedidos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pedidos"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cliente_id\": \"CLI-0042\",\n  \"itens\": [\n    {\n      \"produto_id\": \"PROD-101\",\n      \"quantidade\": 0\n    }\n  ],\n  \"forma_pagamento\": \"BOLETO\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Erro padronizado: REQUISICAO_INVALIDA\", () => {",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j.codigo_erro).to.eql(\"REQUISICAO_INVALIDA\");",
+                  "  pm.expect(j).to.have.all.keys(\"codigo_erro\",\"mensagem\",\"timestamp\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3. GET /pedidos/{id} — Detalhar Pedido",
+      "item": [
+        {
+          "name": "Detalhar pedido criado",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pedidos/{{idPedido}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pedidos",
+                "{{idPedido}}"
+              ]
+            },
+            "description": "Execute antes 'Fechar pedido com sucesso' para preencher {{idPedido}}."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"ID confere\", () => pm.expect(pm.response.json().id_pedido).to.eql(pm.collectionVariables.get(\"idPedido\")));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Erro 404 - pedido inexistente",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pedidos/PED-0000-000",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pedidos",
+                "PED-0000-000"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Erro padronizado: PEDIDO_NAO_ENCONTRADO\", () => {",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j.codigo_erro).to.eql(\"PEDIDO_NAO_ENCONTRADO\");",
+                  "  pm.expect(j).to.have.all.keys(\"codigo_erro\",\"mensagem\",\"timestamp\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "4. PATCH /produtos/{id}/estoque — Ajuste de Estoque",
+      "item": [
+        {
+          "name": "Reposição (+10)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/produtos/PROD-302/estoque",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "produtos",
+                "PROD-302",
+                "estoque"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quantidade_adicional\": 10\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Estoque somado\", () => { const j = pm.response.json(); pm.expect(j.estoque_atualizado).to.eql(j.estoque_anterior + 10); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Baixa manual (-3)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/produtos/PROD-302/estoque",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "produtos",
+                "PROD-302",
+                "estoque"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quantidade_adicional\": -3\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Estoque subtraído\", () => { const j = pm.response.json(); pm.expect(j.estoque_atualizado).to.eql(j.estoque_anterior - 3); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Erro 400 - estoque ficaria negativo",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/produtos/PROD-302/estoque",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "produtos",
+                "PROD-302",
+                "estoque"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quantidade_adicional\": -1000\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Erro padronizado: ESTOQUE_NEGATIVO\", () => {",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j.codigo_erro).to.eql(\"ESTOQUE_NEGATIVO\");",
+                  "  pm.expect(j).to.have.all.keys(\"codigo_erro\",\"mensagem\",\"timestamp\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Erro 404 - produto inexistente",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/produtos/PROD-999/estoque",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "produtos",
+                "PROD-999",
+                "estoque"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quantidade_adicional\": 5\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Erro padronizado: PRODUTO_NAO_ENCONTRADO\", () => {",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j.codigo_erro).to.eql(\"PRODUTO_NAO_ENCONTRADO\");",
+                  "  pm.expect(j).to.have.all.keys(\"codigo_erro\",\"mensagem\",\"timestamp\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8000"
+    },
+    {
+      "key": "idPedido",
+      "value": ""
+    }
+  ]
+}
