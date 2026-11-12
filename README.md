@@ -176,6 +176,6 @@ A coleção tem 14 requisições com casos de sucesso (200/201) e de erro (400/4
 ### Testes automatizados (pytest)
 
 ```bash
-pip install pytest httpx
+pip install pytest httpx2
 pytest -v
 ```
