@@ -34,7 +34,9 @@ MarketPulse-API/
 │   ├── services.py    # Regras de negócio e validações do domínio
 │   └── database.py    # Persistência em memória (repositório)
 ├── tests/
-│   └── test_api.py    # Testes automatizados (pytest)
+│   ├── conftest.py        # Fixtures (base reiniciada a cada teste, TestClient)
+│   ├── test_api.py        # Testes de ponta a ponta dos 4 endpoints (HTTP)
+│   └── test_services.py   # Testes unitários das regras de negócio (sem HTTP)
 ├── MarketPulse-API-Collection.postman_collection.json
 ├── requirements.txt
 └── README.md
